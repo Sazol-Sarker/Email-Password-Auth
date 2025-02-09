@@ -1,9 +1,46 @@
+import {
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+} from "firebase/auth";
+import auth from "../../firebase/firebase.init";
+import { useState } from "react";
 const Register = () => {
+  const [verifyFirstError, setVerifyFirstError] = useState(false);
+
+  const formHandler = (e) => {
+    e.preventDefault();
+    setVerifyFirstError(false);
+    const userName = e.target.userName.value;
+    const userEmail = e.target.userEmail.value;
+    const userPassword = e.target.userPassword.value;
+
+    console.log(e.target.userName.value);
+    console.log(e.target.userEmail.value);
+    console.log(e.target.userPassword.value);
+    createUserWithEmailAndPassword(auth, userEmail, userPassword)
+      .then((result) => {
+        console.log(result.user);
+        if (!result.user.emailVerified) {
+          setVerifyFirstError(true);
+          // send email verification to filter fake emails
+          sendEmailVerification(auth.currentUser).then(() => {
+            console.log("Verification email sent!");
+          });
+        }
+        else{
+          setVerifyFirstError(false);
+          console.log('Thanks for verification!');
+
+
+        }
+      })
+      .catch((error) => console.log(error));
+  };
   return (
     <div className="max-w-3xl mx-auto ">
       <h2 className="text-2xl font-semibold text-center">Register Form</h2>
-      <form className="my-8 flex flex-col items-centers">
-      {/* <form className="my-8 "> */}
+      <form onSubmit={formHandler} className="my-8 flex flex-col items-centers">
+        {/* <form className="my-8 "> */}
         <label className="input input-bordered flex items-center gap-2">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -33,6 +70,7 @@ const Register = () => {
           <input
             type="email"
             name="userEmail"
+            defaultValue="john@doe.com"
             className="grow "
             placeholder="Email"
           />
@@ -61,6 +99,9 @@ const Register = () => {
         {/* button */}
         <button className="btn btn-accent text-xl my-8">Register</button>
       </form>
+      {verifyFirstError && (
+        <p className="text-red-500">Please verify your email!</p>
+      )}
     </div>
   );
 };
